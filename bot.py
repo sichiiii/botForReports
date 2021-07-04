@@ -1,8 +1,10 @@
 import telebot, re
 from sql import SQLITE
+from insert_excel import Insert
 
 bot = telebot.TeleBot('1806915175:AAHQ4q9MJGS7VPTdsVdyMvWECiBwlAaAX-s')
 sql = SQLITE()
+insert = Insert()
 
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
@@ -19,7 +21,6 @@ def get_text_messages(message):
 
         #if(int(time[0]) >= 0 and int(time[0]) <= 23 and int(time[1]) >= 0 and int(time[1]) <= 59):
         result = sql.addRecord(id, name, date, message.chat.id)
-        print(result)
         return result
     except Exception as ex:
         print(str(ex))
@@ -33,7 +34,6 @@ def get_text_messages(message):
         money = result[2]
         time = result[3]
         result = sql.addReport(id, name, money, time, message.chat.id)
-        print(result)
         return result
     except Exception as ex:
         print(str(ex)) 
@@ -45,9 +45,12 @@ def get_text_messages(message):
 def get_records(message):
     try:
         chat_id = int(message.text)
-        final = sql.getRecords(chat_id)
-        print(final)
-        return final
+        insert.insert_excel(chat_id)
+        f = open("records.xlsx","rb")
+        bot.send_document(message.chat.id, f)
+        f = open("reports.xlsx","rb")
+        bot.send_document(message.chat.id, f)
+        return {'status':'ok'}
     except Exception as ex:
         print(str(ex))
         bot.send_message(message.chat.id, 'Wrong group ID')
